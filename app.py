@@ -1,10 +1,8 @@
 from PIL import Image, ImageFilter
 from PIL import ImageFont
-from PIL import ImageDraw 
+from PIL import ImageDraw
 import datetime
-from flask import Flask
-from flask import request
-# from app import api
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -19,11 +17,13 @@ def homePage():
         print(e)
 
 
-@app.route('/wish',methods=['GET'])
+@app.route('/wish', methods=['GET'])
 def my_func():
+    name = request.args["name"]
+
     im1 = Image.open('birthday_template.jpg')
     im2 = Image.open('eg.jpg')
-    width  = im2.size[0]
+    width = im2.size[0]
     height = im2.size[1]
     #ar = round((width / height),2)
     #print (ar)
@@ -41,7 +41,7 @@ def my_func():
             size = (400, 400)
             im2 = im2.resize(size)
 
-        else: 
+        else:
             left = 0
             top = 0
             right = width
@@ -52,7 +52,7 @@ def my_func():
 
     else:
         size = (400, 400)
-        im2 = im2.resize(size)    
+        im2 = im2.resize(size)
 
     mask_im = Image.new("L", im2.size, 0)
     draw = ImageDraw.Draw(mask_im)
@@ -68,30 +68,27 @@ def my_func():
     # font = ImageFont.truetype(<font-file>, <font-size>)
     font = ImageFont.truetype("Fonts/Montserrat-Black.ttf", 65)
     # draw.text((x, y),"Sample Text",(r,g,b))
-    draw.text((45,520),"Sample guy",(255,255,255),font=font)
+    draw.text((45, 520), name, (255, 255, 255), font=font)
 
     # font = ImageFont.truetype(<font-file>, <font-size>)
     font = ImageFont.truetype("Fonts/Montserrat-Black.ttf", 18)
 
     x = datetime.datetime.now()
-    #Month name, short version
+    # Month name, short version
     month = x.strftime("%b")
     day = x.strftime("%d")
 
     # draw.text((x, y),"Sample Text",(r,g,b))
-    draw.text((10, 0),month,(255,255,255),font=font)
-    draw.text((55, 1),day,(255,255,255),font=font)
+    draw.text((10, 0), month, (255, 255, 255), font=font)
+    draw.text((55, 1), day, (255, 255, 255), font=font)
 
     back_im.save('sample-out.jpg', quality=100)
+    return jsonify("Done")
 
 
 if __name__ == "__main__":
     app.run(
-      host='0.0.0.0',
-      debug=True,
-      port=8080
+        # host='0.0.0.0',
+        debug=True,
+        port=8080
     )
-
-
-
-
