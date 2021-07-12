@@ -3,7 +3,7 @@ from PIL import ImageFont
 from PIL import ImageDraw
 import datetime
 from flask import Flask, jsonify, request
-from discord_webhook import DiscordWebhook
+from discord_webhook import DiscordWebhook, DiscordEmbed
 
 app = Flask(__name__)
 
@@ -17,10 +17,29 @@ def homePage():
     except Exception as e:
         print(e)
 
+@app.route('/check',methods=['GET'])
+def hello():
+    try:
+        name = request.args["name"]
+        webhook = DiscordWebhook(
+            url='https://discord.com/api/webhooks/859457851696218122/HmjZy1NAWR5JV4yNaUyNyU83mcYf7pIi81v6-cBo0j3NBw6XMJw6NGMT81F92TA7yIiy')
+
+        # create embed object for webhook
+        embed = DiscordEmbed(title=name,
+                             description='Lorem ipsum dolor sit', color='03b2f8')
+        webhook.add_embed(embed)
+
+        response = webhook.execute()
+        print(response)
+        return jsonify("Done")
+
+    except Exception as e:
+        print(e)
+        return jsonify("Fails")
+
 
 @app.route('/wish', methods=['GET'])
 def my_func():
-    name = request.args["name"]
 
     im1 = Image.open('birthday_template.jpg')
     im2 = Image.open('eg.jpg')
@@ -85,11 +104,12 @@ def my_func():
 
     back_im.save('sample-out.jpg', quality=100)
     try:
+
         webhook = DiscordWebhook(
             url='https://discord.com/api/webhooks/859457851696218122/HmjZy1NAWR5JV4yNaUyNyU83mcYf7pIi81v6-cBo0j3NBw6XMJw6NGMT81F92TA7yIiy')
 
         # create embed object for webhook
-        embed = DiscordEmbed(title='Your Title',
+        embed = DiscordEmbed(title=request.args["name"],
                              description='Lorem ipsum dolor sit', color='03b2f8')
 
         # set author
@@ -116,11 +136,12 @@ def my_func():
         webhook.add_embed(embed)
 
         response = webhook.execute()
+        print(response)
         return jsonify("Done")
 
     except Exception as e:
-        return jsonify("error")
         print(e)
+        return jsonify("error")
 
 
 if __name__ == "__main__":
