@@ -4,6 +4,9 @@ from PIL import ImageDraw
 import datetime
 from flask import Flask, jsonify, request
 from discord_webhook import DiscordWebhook, DiscordEmbed
+import os 
+from git.repo.base import Repo
+
 
 app = Flask(__name__)
 
@@ -25,8 +28,9 @@ def hello():
             url='https://discord.com/api/webhooks/859457851696218122/HmjZy1NAWR5JV4yNaUyNyU83mcYf7pIi81v6-cBo0j3NBw6XMJw6NGMT81F92TA7yIiy')
 
         # create embed object for webhook
-        embed = DiscordEmbed(title=name,
-                             description='Lorem ipsum dolor sit', color='03b2f8')
+        embed = DiscordEmbed(title=name, description='Pattarai wishes you a very Happy Birthday', color='03b2f8')
+        embed.set_image(url='https://i.imgur.com/ZGPxFN2.jpg')
+
         webhook.add_embed(embed)
 
         response = webhook.execute()
@@ -40,7 +44,7 @@ def hello():
 
 @app.route('/wish', methods=['GET'])
 def my_func():
-
+    update_photos()
     im1 = Image.open('birthday_template.jpg')
     im2 = Image.open('eg.jpg')
     width = im2.size[0]
@@ -103,6 +107,7 @@ def my_func():
     draw.text((55, 1), day, (255, 255, 255), font=font)
 
     back_im.save('sample-out.jpg', quality=100)
+    
     try:
 
         webhook = DiscordWebhook(
@@ -110,14 +115,14 @@ def my_func():
 
         # create embed object for webhook
         embed = DiscordEmbed(title=request.args["name"],
-                             description='Lorem ipsum dolor sit', color='03b2f8')
+                             description='Pattarai wishes you a very Happy Birthday',color='03b2f8', image ="https://i.imgur.com/ZGPxFN2.jpg")
 
         # set author
         embed.set_author(name='Author Name', url='author url',
                          icon_url='author icon url')
 
         # set image
-        embed.set_image(url='your image url')
+        embed.set_image(url='sample-out.jpg')
 
         # set thumbnail
         embed.set_thumbnail(url='your thumbnail url')
@@ -142,6 +147,13 @@ def my_func():
     except Exception as e:
         print(e)
         return jsonify("error")
+
+def update_photos():
+    full_local_path = "/path/to/repo/"
+    username = "your-username"
+    password = "your-password"
+    remote = "https://{username}:{password}@github.com/some-account/some-repo.git"
+    Repo.clone_from("https://github.com/dhivya910/pattarai_bday_pics.git", "photos")
 
 
 if __name__ == "__main__":
