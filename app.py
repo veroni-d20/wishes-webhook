@@ -4,9 +4,10 @@ from PIL import ImageDraw
 import datetime
 from flask import Flask, jsonify, request
 from discord_webhook import DiscordWebhook, DiscordEmbed
-import os 
+import os
+import os.path 
 from git.repo.base import Repo
-
+import git
 
 app = Flask(__name__)
 
@@ -25,8 +26,7 @@ def hello():
     try:
         name = request.args["name"]
         webhook = DiscordWebhook(
-            url='https://discord.com/api/webhooks/859457851696218122/HmjZy1NAWR5JV4yNaUyNyU83mcYf7pIi81v6-cBo0j3NBw6XMJw6NGMT81F92TA7yIiy')
-
+            url= os.environ["GIT_USERNAME"])
         # create embed object for webhook
         embed = DiscordEmbed(title=name, description='Pattarai wishes you a very Happy Birthday', color='03b2f8')
         embed.set_image(url='https://i.imgur.com/ZGPxFN2.jpg')
@@ -44,9 +44,25 @@ def hello():
 
 @app.route('/wish', methods=['GET'])
 def my_func():
-    update_photos()
+    update_photos_folder()
+    #def get_picture():
+    name = request.args["name"]
+    profile_photo = name
+
+    directory = 'crew-photos'
+    for filename in os.listdir(directory):
+      if filename == profile_photo:
+        #do smth
+        profile=Image.open(filename)
+        break
+      
+      else:
+        continue
+        
+            
+
     im1 = Image.open('birthday_template.jpg')
-    im2 = Image.open('eg.jpg')
+    im2 = Image.open(profile)
     width = im2.size[0]
     height = im2.size[1]
     # ar = round((width / height),2)
@@ -108,52 +124,63 @@ def my_func():
 
     back_im.save('sample-out.jpg', quality=100)
     
-    try:
+  #  try:
 
-        webhook = DiscordWebhook(
-            url='https://discord.com/api/webhooks/859457851696218122/HmjZy1NAWR5JV4yNaUyNyU83mcYf7pIi81v6-cBo0j3NBw6XMJw6NGMT81F92TA7yIiy')
+        #webhook = DiscordWebhook(
+            #url='CHANNEL_LINK')
+            #my_secret = os.environ['CHANNEL_LINK']
+
 
         # create embed object for webhook
-        embed = DiscordEmbed(title=request.args["name"],
-                             description='Pattarai wishes you a very Happy Birthday',color='03b2f8', image ="https://i.imgur.com/ZGPxFN2.jpg")
+        #embed = DiscordEmbed(title=name,
+                             #description='Pattarai wishes you a very Happy Birthday',color='03b2f8', image ="https://i.imgur.com/ZGPxFN2.jpg")
 
         # set author
-        embed.set_author(name='Author Name', url='author url',
-                         icon_url='author icon url')
+        #embed.set_author(name='Author Name', url='author url',
+                        # icon_url='author icon url')
 
         # set image
-        embed.set_image(url='sample-out.jpg')
+        #embed.set_image(url='sample-out.jpg')
 
         # set thumbnail
-        embed.set_thumbnail(url='your thumbnail url')
+        #embed.set_thumbnail(url='your thumbnail url')
 
         # set footer
-        embed.set_footer(text='Embed Footer Text', icon_url='URL of icon')
+        #embed.set_footer(text='Embed Footer Text', icon_url='URL of icon')
 
         # set timestamp (default is now)
-        embed.set_timestamp()
+        #embed.set_timestamp()
 
         # add fields to embed
-        embed.add_embed_field(name='Field 1', value='Lorem ipsum')
-        embed.add_embed_field(name='Field 2', value='dolor sit')
+        #embed.add_embed_field(name='Field 1', value='Lorem ipsum')
+        #embed.add_embed_field(name='Field 2', value='dolor sit')
 
         # add embed object to webhook
-        webhook.add_embed(embed)
+        #webhook.add_embed(embed)
 
-        response = webhook.execute()
-        print(response)
-        return jsonify("Done")
+        #response = webhook.execute()
+        #print(response)
+        #return jsonify("Done")
 
-    except Exception as e:
-        print(e)
-        return jsonify("error")
+    #except Exception as e:
+        #print(e)
+  #      return jsonify("error")
 
-def update_photos():
-    full_local_path = "/path/to/repo/"
-    username = "your-username"
-    password = "your-password"
-    remote = "https://{username}:{password}@github.com/some-account/some-repo.git"
-    Repo.clone_from("https://github.com/dhivya910/pattarai_bday_pics.git", "photos")
+def update_photos_folder():
+    # Check if folder empty
+    if not os.listdir(os.path.join(os.path.dirname(__file__), 'crew-photos')) :
+      full_local_path = os.path.join(os.path.dirname(__file__), 'crew-photos')
+      username = os.environ["GIT_USERNAME"]
+      password = os.environ["GIT_PASSWORD"]
+      remote = f"https://{username}:{password}@github.com/pattarai/crew-photos.git"
+      Repo.clone_from(remote, full_local_path)
+    # Pull from repo
+    else:
+      repo = git.Repo('crew-photos')
+      o = repo.remotes.origin
+      o.pull()
+
+    
 
 
 if __name__ == "__main__":
