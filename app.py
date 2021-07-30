@@ -59,28 +59,29 @@ def forbidden(error=None):
 
 @app.route('/wish', methods=['GET'])
 def my_func():
+  exists = False
 	update_photos_folder()
 	#def get_picture():
 	name = request.args["name"]
 	profile_photo = name
-  profile = ""
-
 	directory = 'crew-photos'
 	for filename in os.listdir(directory):
 		if filename == profile_photo:
 			#do smth
-			profile = Image.open(filename)
+      exists = True
 			break
 		else:
 			continue
 
 	im1 = Image.open('birthday_template.jpg')
-	im2 = Image.open(profile)
-	width = im2.size[0]
-	height = im2.size[1]
+  im2 = Image.open("https://i.imgur.com/ZGPxFN2.jpg")
+  if exists:
+	  im2 = Image.open(directory+ "/" + profile_photo +".jpg")
 	# ar = round((width / height),2)
 	# print (ar)
-	if width > 600 and height > 800:
+  width = im2.size[0]
+	height = im2.size[1]
+  if width > 600 and height > 800:
 		if width == height:
 			size = (400, 400)
 			im2 = im2.resize(size)
