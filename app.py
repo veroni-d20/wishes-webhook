@@ -21,37 +21,22 @@ def homePage():
         print(e)
 
 
-@app.route('/check', methods=['GET'])
-def hello():
-    try:
-        name = request.args["name"]
-        webhook = DiscordWebhook(url=os.environ["GIT_USERNAME"])
-            # create embed object for webhook
-        embed = DiscordEmbed(
-                title=name,
-                description='Pattarai wishes you a very Happy Birthday',
-                color='03b2f8')
-        embed.set_image(url='https://i.imgur.com/ZGPxFN2.jpg')
-
-        webhook.add_embed(embed)
-
-        response = webhook.execute()
-        print(response)
-        return jsonify("Done")
-    except Exception as e:
-        print(e)
-        return jsonify("Fails")
 
 
 
 
 @app.route('/wish', methods=['GET'])
-def my_func():
+def wish():
     update_photos_folder()
     profileName = request.args["name"]
-    directory = 'crew-photos'
+    directory = 'crew-photos/crew-photos'
+    profilePics = os.listdir(directory)
 
-    exists = True if profileName in os.listdir(directory) else False
+
+
+    profilePicsWithoutExtension = [name.split('.')[0] for name in profilePics]
+
+    exists = True if profileName in profilePicsWithoutExtension else False
 
     template_base = Image.open('birthday_template.jpg')
     profilePicFile = Image.open("default_pic.png")
@@ -99,45 +84,53 @@ def my_func():
     back_im.paste(profilePicFile, (259, -23), mask_im_blur)
 
     draw = ImageDraw.Draw(back_im)
-
-        # font = ImageFont.truetype(<font-file>, <font-size>)
     font = ImageFont.truetype("Fonts/Montserrat-Black.ttf", 65)
-        # draw.text((x, y),"Sample Text",(r,g,b))
     draw.text((45, 520), profileName, (255, 255, 255), font=font)
 
-        # font = ImageFont.truetype(<font-file>, <font-size>)
+    # font = ImageFont.truetype(<font-file>, <font-size>)
     font = ImageFont.truetype("Fonts/Montserrat-Black.ttf", 18)
 
     x = datetime.datetime.now()
-    # Month name, short version
     month = x.strftime("%b")
     day = x.strftime("%d")
 
-    # draw.text((x, y),"Sample Text",(r,g,b))
     draw.text((10, 0), month, (255, 255, 255), font=font)
     draw.text((55, 1), day, (255, 255, 255), font=font)
 
-    back_im.save('output.jpg', quality=100)
+    back_im.save('output.jpg', quality=100) 
 
+    webhook = DiscordWebhook(url=os.environ["WISHES_CHANNEL"])
+    
+    # create embed object for webhook
+    embed = DiscordEmbed(
+            title=profileName,
+            description='Pattarai wishes you a very Happy Birthday',
+            color='03b2f8')
+    webhook.add_embed(embed)
+    response = webhook.execute()
+    
+    
+    with open("output.jpg", "rb") as file:
+      webhook.add_file(file=file.read(), filename=profileName+".jpg")
+      
+    
+    try:
+      response = webhook.execute()
+      print(response)
+      return "done"
+    except Exception as e:
+      return "done: " + e
 
 def update_photos_folder():
-    try:
-        if not os.listdir(os.path.join(os.path.dirname(__file__), 'crew-photos')):
-            full_local_path = os.path.join(os.path.dirname(__file__), 'crew-photos')
-            username = os.environ["GIT_USERNAME"]
-            password = os.environ["GIT_PASSWORD"]
-            remote = f"https://{username}:{password}@github.com/pattarai/crew-photos.git"
-            Repo.clone_from(remote, full_local_path)
-        else:
-            repo = git.Repo('crew-photos')
-            o = repo.remotes.origin
-            o.pull()
-    except Exception as e:
-        print(e)
-        traceback.print_exc()
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, 'crew-photos')
+    if os.path.isdir(filename):
+        os.remove(filename)
+    else:
+        # Clone the Pictures
+        os.system(f"https://{os.environ["GIT_USERNAME"]}:{os.environ["GIT_TOKEN"]}@github.com/pattarai/crew-photos.git")
 
 
-        
 @app.errorhandler(500)
 def forbidden(error=None):
     message = {
@@ -154,3 +147,4 @@ if __name__ == "__main__":
         host='0.0.0.0',
         debug=True,
         port=8080)
+
