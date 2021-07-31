@@ -1,5 +1,5 @@
 import datetime
-import os
+import os, shutil
 import os.path
 import traceback
 import git
@@ -20,19 +20,12 @@ def homePage():
     except Exception as e:
         print(e)
 
-
-
-
-
-
 @app.route('/wish', methods=['GET'])
 def wish():
     update_photos_folder()
     profileName = request.args["name"]
     directory = 'crew-photos/crew-photos'
     profilePics = os.listdir(directory)
-
-
 
     profilePicsWithoutExtension = [name.split('.')[0] for name in profilePics]
 
@@ -107,9 +100,7 @@ def wish():
             description='Pattarai wishes you a very Happy Birthday',
             color='03b2f8')
     webhook.add_embed(embed)
-    response = webhook.execute()
-    
-    
+
     with open("output.jpg", "rb") as file:
       webhook.add_file(file=file.read(), filename=profileName+".jpg")
       
@@ -123,12 +114,14 @@ def wish():
 
 def update_photos_folder():
     dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, 'crew-photos')
-    if os.path.isdir(filename):
-        os.remove(filename)
-    else:
-        # Clone the Pictures
-        os.system(f"https://{os.environ["GIT_USERNAME"]}:{os.environ["GIT_TOKEN"]}@github.com/pattarai/crew-photos.git")
+    folderName = os.path.join(dirname, 'crew-photos')
+    shutil.rmtree(folderName)
+
+    # Clone the Pictures
+    username = os.environ["GIT_USERNAME"]
+    token = os.environ["GIT_TOKEN"]
+    cloneCommand = f"git clone https://{username}:{token}@github.com/pattarai/crew-photos.git"
+    os.system(cloneCommand)
 
 
 @app.errorhandler(500)
